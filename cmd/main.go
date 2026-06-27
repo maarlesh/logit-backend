@@ -7,13 +7,16 @@ import (
 )
 
 func main() {
-	db := api.InitDB()
+	api.InitDB()
 
 	r := gin.Default()
-	
-	r.POST("/user", func(c *gin.Context) {
-		api.CreateUser(db, c)
+
+	r.POST("/auth/register", func(c *gin.Context) {
+		api.Register(c)
 	})
-	
+	r.POST("/auth/login", func(c *gin.Context) {
+		api.Login(c)
+	})
+
 	r.Run(":8080")
 }
