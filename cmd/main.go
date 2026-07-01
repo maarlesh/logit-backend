@@ -2,6 +2,7 @@ package main
 
 import (
 	"logit-backend/api"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,9 @@ func main() {
 
 	r := gin.Default()
 
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 	r.POST("/auth/register", func(c *gin.Context) {
 		api.Register(c)
 	})
@@ -18,5 +22,10 @@ func main() {
 		api.Login(c)
 	})
 
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	r.Run(":" + port)
 }

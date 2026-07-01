@@ -14,9 +14,8 @@ import (
 var DB *gorm.DB
 
 func InitDB() *gorm.DB {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Failed to load .env:", err)
+	if err := godotenv.Load(); err != nil {
+		log.Printf("No .env file loaded: %v", err)
 	}
 	dsn := os.Getenv("DB_URL")
 	pgxConfig, err := pgx.ParseConfig(dsn)
