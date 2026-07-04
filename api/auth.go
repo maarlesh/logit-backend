@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterRequest struct {
@@ -28,9 +29,15 @@ func Register(c *gin.Context) {
         return
     }
 
+    authKeyHash, err := bcrypt.GenerateFromPassword([]byte(req.AuthKey), bcrypt.DefaultCost)
+    if err != nil {
+        ResponseJSON(c, http.StatusInternalServerError, "Failed to process credentials", nil)
+        return
+    }
+
     user := User{
         Email:           req.Email,
-        AuthKeyHash:     req.AuthKey, // hash this in next step
+        AuthKeyHash:     string(authKeyHash),
         KdfSalt:         req.KdfSalt,
         KdfParams:       req.KdfParams,
         WrappedVaultKey: req.WrappedVaultKey,
@@ -44,6 +51,33 @@ func Register(c *gin.Context) {
 
     ResponseJSON(c, http.StatusCreated, "registered successfully", gin.H{
         "user_id": user.ID,
+    })
+}
+
+type KdfParamsResponse struct {
+    KdfSalt   []byte    `json:"kdf_salt"`
+    KdfParams KdfParams `json:"kdf_params"`
+}
+
+// GetKdfParams lets a client that has no local copy of a user's KDF salt/params (e.g. a fresh
+// device) fetch them by email before deriving auth_key for Login. No credentials required —
+// these values aren't secret on their own, only useful alongside the password.
+func GetKdfParams(c *gin.Context) {
+    email := c.Query("email")
+    if email == "" {
+        ResponseJSON(c, http.StatusBadRequest, "email is required", nil)
+        return
+    }
+
+    var user User
+    if err := DB.Where("email = ?", email).First(&user).Error; err != nil {
+        ResponseJSON(c, http.StatusNotFound, "Account not found", nil)
+        return
+    }
+
+    ResponseJSON(c, http.StatusOK, "ok", KdfParamsResponse{
+        KdfSalt:   user.KdfSalt,
+        KdfParams: user.KdfParams,
     })
 }
 
@@ -75,8 +109,7 @@ func Login(c *gin.Context) {
         return
     }
 
-    // TODO: replace with Argon2id hash comparison when Register hashes auth_key
-    if user.AuthKeyHash != req.AuthKey {
+    if err := bcrypt.CompareHashAndPassword([]byte(user.AuthKeyHash), []byte(req.AuthKey)); err != nil {
         ResponseJSON(c, http.StatusUnauthorized, "Invalid credentials", nil)
         return
     }

@@ -18,6 +18,9 @@ func main() {
 	r.POST("/auth/register", func(c *gin.Context) {
 		api.Register(c)
 	})
+	r.GET("/auth/kdf-params", func(c *gin.Context) {
+		api.GetKdfParams(c)
+	})
 	r.POST("/auth/login", func(c *gin.Context) {
 		api.Login(c)
 	})
