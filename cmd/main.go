@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"logit-backend/api"
 	"os"
 
@@ -9,6 +10,10 @@ import (
 
 func main() {
 	api.InitDB()
+
+	if os.Getenv("JWT_SECRET") == "" {
+		log.Fatal("JWT_SECRET must be set")
+	}
 
 	r := gin.Default()
 
@@ -23,6 +28,15 @@ func main() {
 	})
 	r.POST("/auth/login", func(c *gin.Context) {
 		api.Login(c)
+	})
+	r.POST("/auth/refresh", func(c *gin.Context) {
+		api.Refresh(c)
+	})
+
+	protected := r.Group("/")
+	protected.Use(api.AuthMiddleware())
+	protected.POST("/auth/logout", func(c *gin.Context) {
+		api.Logout(c)
 	})
 
 	port := os.Getenv("PORT")
