@@ -38,6 +38,10 @@ func main() {
 	protected.POST("/auth/logout", func(c *gin.Context) {
 		api.Logout(c)
 	})
+	
+	protected.POST("/records", func(c *gin.Context){
+		api.CreateRecord(c)
+	})
 
 	port := os.Getenv("PORT")
 	if port == "" {

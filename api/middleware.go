@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -22,8 +23,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		userID, err := ParseAccessToken(parts[1])
+		fmt.Println("Parsed userID:", userID, "Error:", err)
 		if err != nil {
-			ResponseJSON(c, http.StatusUnauthorized, "Invalid or expired token", nil)
+			ResponseJSON(c, http.StatusUnauthorized, "Invalid or expired token", err)
 			c.Abort()
 			return
 		}
