@@ -43,6 +43,18 @@ func main() {
 		api.CreateRecord(c)
 	})
 
+	protected.GET("/records", func(c *gin.Context){
+		api.GetRecords(c)
+	})
+
+	protected.PUT("/records/:id", func(c *gin.Context){
+		api.UpdateRecord(c)
+	})
+
+	protected.DELETE("/records/:id", func(c *gin.Context){
+		api.DeleteRecord(c)
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
