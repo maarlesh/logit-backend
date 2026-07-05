@@ -116,7 +116,6 @@ func Login(c *gin.Context) {
 
     var user User
     if err := DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
-        // same message whether email missing or wrong auth_key — avoids user enumeration
         ResponseJSON(c, http.StatusUnauthorized, "Invalid credentials", nil)
         return
     }
